@@ -1,0 +1,39 @@
+# Core ML libraries
+torch>=1.12.0
+torchvision>=0.13.0
+transformers>=4.20.0
+timm>=0.6.0
+accelerate>=0.20.0
+
+# Vision Transformer support
+einops>=0.6.0  # For tensor operations in ViT
+
+# Segmentation models
+segmentation-models-pytorch>=0.3.0
+
+# Computer Vision & Image Processing
+opencv-python-headless>=4.5.0
+albumentations>=1.3.0
+Pillow>=9.0.0
+
+# Data Science & Visualization
+numpy>=1.21.0
+pandas>=1.4.0
+matplotlib>=3.5.0
+seaborn>=0.11.0
+scikit-learn>=1.1.0
+
+# Utilities
+tqdm>=4.64.0
+datasets>=2.0.0
+gdown>=4.7.0
+rarfile>=4.0
+hf_xet>=0.16.0  # Tối ưu tốc độ tải từ Hugging Face Hub
+
+# Jupyter (optional, for notebook)
+jupyter>=1.0.0
+ipywidgets>=7.7.0
+
+# Optional: For faster training
+# nvidia-ml-py3>=7.352.0  # For GPU monitoring
+# tensorboard>=2.9.0      # For logging
