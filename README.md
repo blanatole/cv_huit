@@ -2,6 +2,23 @@
 
 Dự án này thực hiện bài toán phân đoạn khối u da (skin lesion segmentation) sử dụng các pre-trained models từ Hugging Face Transformers và Timm trên dataset ISIC với các cải tiến hiện đại.
 
+## 🚀 Cập nhật mới: Sử dụng Google Drive API
+
+Project đã được cập nhật để sử dụng **Google Drive API** thay vì `gdown` để tải dữ liệu, mang lại nhiều ưu điểm:
+
+### ✅ Ưu điểm của Google Drive API:
+- **Bảo mật cao hơn**: Sử dụng Service Account thay vì public link
+- **Ổn định hơn**: Không bị giới hạn tốc độ như `gdown`
+- **Kiểm soát quyền truy cập**: Có thể quản lý ai được phép tải dữ liệu
+- **Hiển thị tiến trình**: Thanh tiến trình chi tiết khi tải file lớn
+- **Xử lý lỗi tốt hơn**: Thông báo lỗi rõ ràng và hướng dẫn khắc phục
+
+### 📁 Cấu trúc file mới:
+- `data_downloader.py`: Module chính để tải dữ liệu từ Google Drive API
+- `download.py`: Script đơn giản để tải dataset
+- `test_notebook_cell.py`: Script test để kiểm tra notebook cell
+- `service_account.json`: File credentials cho Google Drive API (cần tạo)
+
 ## 🎯 Mục tiêu
 
 - Phân đoạn chính xác vùng khối u da trong ảnh y tế
@@ -74,10 +91,47 @@ data/
 
 ### Python packages:
 ```bash
+# Core ML libraries
 pip install transformers timm torch torchvision
 pip install segmentation-models-pytorch accelerate datasets
 pip install albumentations opencv-python-headless
 pip install matplotlib seaborn scikit-learn pillow tqdm
+
+# Google Drive API (mới)
+pip install google-api-python-client google-auth google-auth-oauthlib google-auth-httplib2
+
+# Hoặc cài đặt tất cả từ requirements.txt
+pip install -r requirements.txt
+```
+
+### 🔑 Setup Google Drive API:
+
+#### Bước 1: Tạo Service Account
+1. Truy cập [Google Cloud Console](https://console.cloud.google.com/)
+2. Tạo project mới hoặc chọn project hiện có
+3. Bật Google Drive API:
+   - Vào **APIs & Services** > **Library**
+   - Tìm "Google Drive API" và bật nó
+4. Tạo Service Account:
+   - Vào **APIs & Services** > **Credentials**
+   - Click **Create Credentials** > **Service Account**
+   - Đặt tên và tạo service account
+5. Tạo key cho Service Account:
+   - Click vào service account vừa tạo
+   - Vào tab **Keys** > **Add Key** > **Create New Key**
+   - Chọn **JSON** và tải về
+   - Đổi tên file thành `service_account.json`
+
+#### Bước 2: Chia sẻ Google Drive file
+1. Mở file Google Drive cần tải (dataset)
+2. Click **Share** (Chia sẻ)
+3. Thêm email của service account (có dạng `xxx@project-name.iam.gserviceaccount.com`)
+4. Cấp quyền **Viewer** hoặc **Editor**
+
+#### Bước 3: Đặt file credentials
+```bash
+# Đặt file service_account.json vào thư mục gốc của project
+mv ~/Downloads/service_account.json ./service_account.json
 ```
 
 ### Hardware:
@@ -98,19 +152,44 @@ cd CV_Master
 pip install -r requirements.txt
 ```
 
-### 3. Tải dữ liệu tự động trong Notebook
-✨ **Tính năng mới**: Dữ liệu sẽ được tải tự động khi chạy notebook!
+### 3. Setup Google Drive API (bắt buộc)
+Làm theo hướng dẫn ở phần **🔑 Setup Google Drive API** ở trên để tạo `service_account.json`
+
+### 4. Tải dữ liệu
+✨ **Tính năng mới**: Sử dụng Google Drive API thay vì gdown!
+
+**Cách 1: Sử dụng script download.py**
+```bash
+python download.py
+```
+
+**Cách 2: Sử dụng trong notebook**
+Notebook sẽ tự động tải dữ liệu khi chạy cell tương ứng.
+
+**Cách 3: Sử dụng module trực tiếp**
+```python
+from data_downloader import GoogleDriveDownloader, DatasetManager
+
+# Khởi tạo downloader
+downloader = GoogleDriveDownloader('service_account.json')
+dataset_manager = DatasetManager(downloader)
+
+# Tải dataset
+file_id = "1IL3JPRaxhKoQMjPk_AzNK5w4OsE2gjsI"
+dataset_manager.download_and_extract_dataset(file_id)
+```
 
 **Google Drive Link**: `https://drive.google.com/file/d/1IL3JPRaxhKoQMjPk_AzNK5w4OsE2gjsI/view?usp=sharing`
 
-Notebook sẽ tự động:
-- Tải dữ liệu từ Google Drive
-- Giải nén file RAR/ZIP
-- Tạo cấu trúc thư mục
-- Cài đặt `unrar` trên Linux nếu cần
-- Kiểm tra tính toàn vẹn dữ liệu
+Hệ thống sẽ tự động:
+- ✅ Xác thực với Google Drive API
+- 📥 Tải dữ liệu với thanh tiến trình
+- 📂 Giải nén file RAR/ZIP
+- 📁 Tạo cấu trúc thư mục
+- 🔧 Cài đặt `unrar` trên Linux nếu cần
+- ✔️ Kiểm tra tính toàn vẹn dữ liệu
 
-### 4. Chạy notebook
+### 5. Chạy notebook
 ```bash
 jupyter notebook medical_tumor_segmentation.ipynb
 ```
@@ -121,7 +200,7 @@ jupyter notebook medical_tumor_segmentation.ipynb
 - Xem file `SETUP.md` để có hướng dẫn chi tiết thiết lập trên thiết bị mới
 - Xem file `VIT_GUIDE.md` để hiểu chi tiết về Vision Transformer models
 
-### 5. Training models
+### 6. Training models
 Notebook bao gồm code để train 3 models với **Learning Rate Scheduling**:
 - **SegFormer**: 20 epochs với Cosine Annealing
 - **U-Net với EfficientNet**: 25 epochs với ReduceLROnPlateau

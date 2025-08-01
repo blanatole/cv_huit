@@ -30,6 +30,12 @@ gdown>=4.7.0
 rarfile>=4.0
 hf_xet>=0.16.0  # Tối ưu tốc độ tải từ Hugging Face Hub
 
+# Google Drive API
+google-api-python-client>=2.0.0
+google-auth>=2.0.0
+google-auth-oauthlib>=0.5.0
+google-auth-httplib2>=0.1.0
+
 # Jupyter (optional, for notebook)
 jupyter>=1.0.0
 ipywidgets>=7.7.0
