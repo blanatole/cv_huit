@@ -179,3 +179,30 @@ models/
 # TensorBoard logs
 tensorboard_logs/
 tb_logs/
+
+# Google Drive API credentials and sensitive files
+service_account.json
+*.json
+credentials.json
+client_secret.json
+token.json
+
+# API keys and secrets
+.env.local
+.env.production
+.env.development
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Configuration files with sensitive data
+config.ini
+config.yaml
+settings.json
+secrets.yaml
+
+# Temporary download files
+temp_downloads/
+downloads/
+*.download
