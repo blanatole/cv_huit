@@ -155,65 +155,238 @@ pip install -r requirements.txt
 ### 3. Setup Google Drive API (bắt buộc)
 Làm theo hướng dẫn ở phần **🔑 Setup Google Drive API** ở trên để tạo `service_account.json`
 
-### 4. Tải dữ liệu
-✨ **Tính năng mới**: Sử dụng Google Drive API thay vì gdown!
+## 📚 **5 NOTEBOOKS ĐỘC LẬP** - Cách sử dụng mới
 
-**Cách 1: Sử dụng script download.py**
+Project đã được chia thành **5 notebooks nhỏ** để dễ dàng quản lý và chạy từng phần riêng biệt:
+
+### 📋 **Danh sách Notebooks:**
+
+#### 1. 📥 `01_data_download.ipynb` - Tải và Chuẩn bị Dữ liệu
+**Mục đích**: Tải dataset ISIC từ Google Drive và chuẩn bị dữ liệu cho training
+
+**Nội dung**:
+- Tải dữ liệu từ Google Drive API
+- Giải nén và tạo cấu trúc thư mục
+- Khám phá và visualize dữ liệu
+- Phân tích thống kê dataset
+- Tạo summary cho các notebook training
+
+**Thời gian**: ~10-15 phút
+**Yêu cầu**: File `service_account.json` cho Google Drive API
+
+#### 2. 🤖 `02_train_segformer.ipynb` - Training SegFormer
+**Mục đích**: Train model SegFormer (Transformer-based segmentation)
+
+**Cấu hình**:
+- **Model**: `nvidia/segformer-b0-finetuned-ade-512-512`
+- **Parameters**: ~3.7M
+- **Epochs**: 20
+- **Learning Rate**: 5e-5
+- **Scheduler**: Cosine Annealing
+- **Ưu điểm**: Hiệu suất cao, ít tham số
+
+**Thời gian**: ~2-3 giờ
+**Output**: `models/segformer_model_*.pth`
+
+#### 3. 🏗️ `03_train_unet_efficientnet.ipynb` - Training U-Net EfficientNet
+**Mục đích**: Train U-Net với EfficientNet backbone
+
+**Cấu hình**:
+- **Backbone**: EfficientNet-B0
+- **Parameters**: ~5.3M
+- **Epochs**: 25
+- **Learning Rate**: 1e-4
+- **Scheduler**: ReduceLROnPlateau (adaptive)
+- **Ưu điểm**: Cân bằng tốt giữa hiệu suất và tốc độ
+
+**Thời gian**: ~1-2 giờ
+**Output**: `models/unet_efficientnet_model_*.pth`
+
+#### 4. 🔬 `04_train_unet_vit.ipynb` - Training U-Net ViT
+**Mục đích**: Train U-Net với Vision Transformer backbone
+
+**Cấu hình**:
+- **Backbone**: Vision Transformer Base
+- **Parameters**: ~90M
+- **Epochs**: 20
+- **Learning Rate**: 1e-4
+- **Scheduler**: Cosine Annealing với Warmup (5 epochs)
+- **Ưu điểm**: Attention mechanism mạnh mẽ
+
+**Thời gian**: ~2-3 giờ
+**Output**: `models/unet_vit_model_*.pth`
+
+#### 5. 🎯 `05_train_deeplabv3_resnet.ipynb` - Training DeepLabV3+ ResNet
+**Mục đích**: Train DeepLabV3+ với ResNet backbone
+
+**Cấu hình**:
+- **Backbone**: ResNet-50
+- **Parameters**: ~39.6M
+- **Epochs**: 15
+- **Learning Rate**: 1e-4
+- **Scheduler**: StepLR (step_size=5, gamma=0.1)
+- **Ưu điểm**: Robust, xử lý tốt multi-scale objects
+
+**Thời gian**: ~3-4 giờ
+**Output**: `models/deeplabv3_resnet_model_*.pth`
+
+### 🚀 **Cách chạy Notebooks:**
+
+#### **Bước 1: Chuẩn bị môi trường**
 ```bash
-python download.py
+# Clone repository
+git clone <repository_url>
+cd cv_huit
+
+# Cài đặt dependencies
+pip install -r requirements.txt
 ```
 
-**Cách 2: Sử dụng trong notebook**
-Notebook sẽ tự động tải dữ liệu khi chạy cell tương ứng.
+#### **Bước 2: Setup Google Drive API (cho notebook 1)**
+1. Tạo Service Account trên Google Cloud Console
+2. Tải file credentials và đổi tên thành `service_account.json`
+3. Chia sẻ dataset với service account email
 
-**Cách 3: Sử dụng module trực tiếp**
-```python
-from data_downloader import GoogleDriveDownloader, DatasetManager
+#### **Bước 3: Chạy notebooks theo thứ tự**
 
-# Khởi tạo downloader
-downloader = GoogleDriveDownloader('service_account.json')
-dataset_manager = DatasetManager(downloader)
-
-# Tải dataset
-file_id = "1IL3JPRaxhKoQMjPk_AzNK5w4OsE2gjsI"
-dataset_manager.download_and_extract_dataset(file_id)
-```
-
-**Google Drive Link**: `https://drive.google.com/file/d/1IL3JPRaxhKoQMjPk_AzNK5w4OsE2gjsI/view?usp=sharing`
-
-Hệ thống sẽ tự động:
-- ✅ Xác thực với Google Drive API
-- 📥 Tải dữ liệu với thanh tiến trình
-- 📂 Giải nén file RAR/ZIP
-- 📁 Tạo cấu trúc thư mục
-- 🔧 Cài đặt `unrar` trên Linux nếu cần
-- ✔️ Kiểm tra tính toàn vẹn dữ liệu
-
-### 5. Chạy notebook
+##### 📥 **Bắt buộc**: Chạy notebook 1 trước
 ```bash
-jupyter notebook medical_tumor_segmentation.ipynb
+jupyter notebook 01_data_download.ipynb
+```
+- Chạy tất cả cells từ trên xuống dưới
+- Đảm bảo dữ liệu được tải thành công
+
+##### 🤖 **Tùy chọn**: Chạy các notebook training (2-5)
+Bạn có thể chạy **bất kỳ notebook nào** trong số 4 notebook training:
+
+```bash
+# SegFormer (nhẹ nhất, nhanh nhất)
+jupyter notebook 02_train_segformer.ipynb
+
+# U-Net EfficientNet (cân bằng)
+jupyter notebook 03_train_unet_efficientnet.ipynb
+
+# U-Net ViT (hiệu suất cao)
+jupyter notebook 04_train_unet_vit.ipynb
+
+# DeepLabV3+ ResNet (robust nhất)
+jupyter notebook 05_train_deeplabv3_resnet.ipynb
 ```
 
-**📋 Lưu ý**:
-- Notebook sẽ tự động cài đặt dependencies và tải dữ liệu
-- Chạy các cell theo thứ tự từ trên xuống dưới
-- Xem file `SETUP.md` để có hướng dẫn chi tiết thiết lập trên thiết bị mới
-- Xem file `VIT_GUIDE.md` để hiểu chi tiết về Vision Transformer models
+### 📊 **So sánh Models**
 
-### 6. Training models
-Notebook bao gồm code để train 3 models với **Learning Rate Scheduling**:
-- **SegFormer**: 20 epochs với Cosine Annealing
-- **U-Net với EfficientNet**: 25 epochs với ReduceLROnPlateau
-- **DeepLabV3+ với ResNet**: 15 epochs với StepLR
+| Model | Parameters | Training Time | Dice Score* | Jaccard Index* | Scheduler |
+|-------|------------|---------------|-------------|----------------|-----------|
+| SegFormer | 3.7M | 2-3h | ~0.90 | ~0.82 | Cosine Annealing |
+| U-Net EfficientNet | 5.3M | 1-2h | ~0.89 | ~0.81 | ReduceLROnPlateau |
+| U-Net ViT | 90M | 2-3h | ~0.90 | ~0.83 | Cosine + Warmup |
+| DeepLabV3+ ResNet | 39.6M | 3-4h | ~0.89 | ~0.80 | StepLR |
 
-Tất cả models được lưu trong folder `models/` để tổ chức tốt hơn.
+*Kết quả dự kiến, có thể thay đổi tùy thuộc vào dataset và hyperparameters
 
-### 6. Evaluation
-Sử dụng các functions có sẵn để:
-- Đánh giá performance trên test set với **Dice Coefficient** và **Jaccard Index**
-- Visualize predictions từ tất cả models
-- So sánh training histories và learning rate schedules
-- Tạo performance comparison table
+### 💾 **Cấu trúc Output**
+
+Sau khi chạy các notebooks, bạn sẽ có:
+
+```
+cv_huit/
+├── data/                           # Dataset (từ notebook 1)
+│   ├── train/
+│   ├── val/
+│   └── test/
+├── models/                         # Trained models (từ notebooks 2-5)
+│   ├── segformer_model_best.pth
+│   ├── segformer_model_final.pth
+│   ├── unet_efficientnet_model_best.pth
+│   ├── unet_efficientnet_model_final.pth
+│   ├── unet_vit_model_best.pth
+│   ├── unet_vit_model_final.pth
+│   ├── deeplabv3_resnet_model_best.pth
+│   └── deeplabv3_resnet_model_final.pth
+└── notebooks/
+    ├── 01_data_download.ipynb
+    ├── 02_train_segformer.ipynb
+    ├── 03_train_unet_efficientnet.ipynb
+    ├── 04_train_unet_vit.ipynb
+    └── 05_train_deeplabv3_resnet.ipynb
+```
+
+### 🎯 **Lựa chọn Model phù hợp**
+
+#### 🚀 **Nếu bạn muốn nhanh và hiệu quả**:
+→ Chạy `02_train_segformer.ipynb` (SegFormer)
+- Ít tham số nhất (3.7M)
+- Hiệu suất cao
+- Training nhanh
+
+#### ⚖️ **Nếu bạn muốn cân bằng**:
+→ Chạy `03_train_unet_efficientnet.ipynb` (U-Net EfficientNet)
+- Cân bằng tốt giữa hiệu suất và tốc độ
+- Training nhanh nhất (1-2h)
+
+#### 🎯 **Nếu bạn muốn hiệu suất cao nhất**:
+→ Chạy `04_train_unet_vit.ipynb` (U-Net ViT)
+- Attention mechanism mạnh mẽ
+- Hiệu suất cao trên medical images
+
+#### 🛡️ **Nếu bạn muốn robust nhất**:
+→ Chạy `05_train_deeplabv3_resnet.ipynb` (DeepLabV3+ ResNet)
+- Xử lý tốt multi-scale objects
+- ASPP module cho multi-scale features
+
+### 🔧 **Troubleshooting**
+
+#### ❌ **Lỗi Google Drive API**:
+- Kiểm tra file `service_account.json`
+- Đảm bảo service account có quyền truy cập file
+- Kiểm tra kết nối internet
+
+#### ❌ **Lỗi giải nén RAR** (phổ biến nhất):
+```bash
+# Chạy script fix tự động
+python fix_extraction.py
+
+# Hoặc cài đặt thủ công
+pip install rarfile
+
+# Linux/Ubuntu
+sudo apt install unrar
+
+# macOS
+brew install unrar
+
+# Windows: Tải WinRAR hoặc 7-Zip
+```
+
+#### ❌ **Lỗi GPU Memory**:
+- Giảm batch_size từ 8 xuống 4 hoặc 2
+- Sử dụng CPU nếu cần: `device = 'cpu'`
+
+#### ❌ **Lỗi Dependencies**:
+```bash
+pip install --upgrade torch torchvision
+pip install --upgrade transformers timm
+pip install segmentation-models-pytorch
+```
+
+### 📝 **Notes**
+
+- **Notebook 1** là **bắt buộc** phải chạy trước
+- **Notebooks 2-5** có thể chạy **độc lập** với nhau
+- Mỗi notebook tự động lưu model tốt nhất và model cuối cùng
+- Tất cả notebooks đều có visualization và evaluation
+- Có thể dừng và tiếp tục training bằng cách load model đã lưu
+
+### 🎉 **Kết luận**
+
+Project đã được tổ chức thành **5 notebooks độc lập** để:
+- ✅ Dễ dàng quản lý và debug
+- ✅ Có thể chạy từng model riêng biệt
+- ✅ Tiết kiệm thời gian khi chỉ cần train 1 model
+- ✅ Dễ dàng so sánh và thử nghiệm
+- ✅ Có thể chạy song song trên nhiều GPU/máy khác nhau
+
+**Happy Training! 🚀**
 
 ## 📈 Metrics đánh giá chính
 
@@ -295,27 +468,54 @@ models/
 
 *Lưu ý: Kết quả có thể thay đổi tùy thuộc vào dataset và hyperparameters*
 
-## 📝 Cấu trúc Notebook
+## 📝 Cấu trúc Notebooks
 
-1. **Import và cài đặt**: Cài đặt thư viện cần thiết (tự động)
-2. **Tải dữ liệu**: Tự động tải và giải nén từ Google Drive
-3. **Khám phá dữ liệu**: Phân tích dataset, visualize samples
-4. **Dataset và Augmentation**: Tạo PyTorch Dataset và DataLoader (bao gồm test set)
-5. **Model Definitions**: Định nghĩa các model architectures
-   - 5.1 SegFormer (Hugging Face)
-   - 5.2 U-Net với EfficientNet Backbone
-   - 5.3 DeepLabV3+ với ResNet Backbone
-6. **Loss Functions**: Dice Loss, Combined Loss (BCE + Dice), Metrics (Dice & Jaccard)
-7. **Training Functions**: Enhanced training với comprehensive metrics tracking
-8. **Training Models**:
-   - 8.1 SegFormer với Cosine Annealing
-   - 8.2 U-Net với ReduceLROnPlateau
-   - 8.3 DeepLabV3+ với StepLR
-9. **Visualization**: Plot training curves, learning rate schedules, so sánh models
-10. **Evaluation**: Đánh giá comprehensive trên test set với Dice & Jaccard
-11. **Demo**: Hướng dẫn sử dụng models đã train từ folder `models/`
-12. **Performance Comparison**: Bảng so sánh chi tiết với actual results
-13. **Kết luận**: Tổng kết cải tiến và hướng phát triển
+### 📥 **Notebook 1: Data Download**
+1. **Import thư viện**: Google Drive API, visualization tools
+2. **Google Drive Setup**: Xác thực và kết nối API
+3. **Download Dataset**: Tải ISIC dataset với progress bar
+4. **Data Exploration**: Phân tích cấu trúc, visualize samples
+5. **Statistics**: Thống kê kích thước, phân bố mask
+6. **Summary**: Chuẩn bị thông tin cho training notebooks
+
+### 🤖 **Notebook 2: SegFormer Training**
+1. **Setup**: Import transformers, segmentation libraries
+2. **Dataset**: ISIC dataset với augmentation
+3. **Model**: SegFormer từ Hugging Face
+4. **Training**: Cosine Annealing scheduler, 20 epochs
+5. **Evaluation**: Dice & Jaccard metrics, visualization
+6. **Results**: Performance summary và model saving
+
+### 🏗️ **Notebook 3: U-Net EfficientNet Training**
+1. **Setup**: Segmentation models pytorch, timm
+2. **Dataset**: Cùng dataset với augmentation khác nhau
+3. **Model**: U-Net với EfficientNet-B0 backbone
+4. **Training**: ReduceLROnPlateau scheduler, 25 epochs
+5. **Evaluation**: Comprehensive metrics tracking
+6. **Results**: Comparison với SegFormer
+
+### 🔬 **Notebook 4: U-Net ViT Training**
+1. **Setup**: Vision Transformer libraries, einops
+2. **Dataset**: Optimized cho ViT input requirements
+3. **Model**: U-Net với ViT backbone (hoặc ResNet fallback)
+4. **Training**: Cosine Annealing với Warmup, 20 epochs
+5. **Evaluation**: Advanced metrics và attention visualization
+6. **Results**: High-performance model analysis
+
+### 🎯 **Notebook 5: DeepLabV3+ ResNet Training**
+1. **Setup**: Multi-scale segmentation setup
+2. **Dataset**: Same preprocessing pipeline
+3. **Model**: DeepLabV3+ với ResNet-50, ASPP module
+4. **Training**: StepLR scheduler, 15 epochs
+5. **Evaluation**: Multi-scale performance analysis
+6. **Results**: Robust model comparison và final summary
+
+### 📊 **Tổng kết tất cả Notebooks**
+- **Notebook 1**: Bắt buộc chạy trước (data preparation)
+- **Notebooks 2-5**: Độc lập, có thể chạy bất kỳ thứ tự nào
+- **Mỗi notebook**: Complete pipeline từ setup đến evaluation
+- **Output**: Trained models trong folder `models/`
+- **Visualization**: Training curves, predictions, comparisons
 
 ## 🚨 Lưu ý quan trọng
 

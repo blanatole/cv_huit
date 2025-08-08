@@ -40,17 +40,24 @@ def main():
         else:
             print("\n❌ Tải dataset thất bại!")
             print("\n🔧 Hướng dẫn khắc phục:")
-            print("1. Kiểm tra file service_account.json có tồn tại và đúng định dạng")
-            print("2. Đảm bảo service account có quyền truy cập file trên Google Drive")
-            print("3. Kiểm tra kết nối internet")
-            print("4. Kiểm tra Google Drive File ID có đúng không")
+            print("1. Chạy script fix: python fix_extraction.py")
+            print("2. Kiểm tra file service_account.json có tồn tại và đúng định dạng")
+            print("3. Đảm bảo service account có quyền truy cập file trên Google Drive")
+            print("4. Kiểm tra kết nối internet")
+            print("5. Cài đặt rarfile: pip install rarfile")
+            print("6. Kiểm tra Google Drive File ID có đúng không")
+            print("7. Thử tải thủ công từ: https://drive.google.com/file/d/1IL3JPRaxhKoQMjPk_AzNK5w4OsE2gjsI/view?usp=sharing")
 
     except FileNotFoundError as e:
         print(f"❌ Không tìm thấy file: {str(e)}")
         print("💡 Đảm bảo file service_account.json tồn tại trong thư mục hiện tại")
     except Exception as e:
         print(f"❌ Lỗi không mong muốn: {str(e)}")
-        print("💡 Vui lòng kiểm tra lại cấu hình và thử lại")
+        print("💡 Hướng dẫn khắc phục:")
+        print("1. Chạy script fix: python fix_extraction.py")
+        print("2. Kiểm tra file service_account.json có đúng format")
+        print("3. Thử tải thủ công từ: https://drive.google.com/file/d/1IL3JPRaxhKoQMjPk_AzNK5w4OsE2gjsI/view?usp=sharing")
+        print("4. Giải nén thủ công vào thư mục data/")
 
 if __name__ == "__main__":
     main()

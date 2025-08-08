@@ -200,77 +200,173 @@ class DatasetManager:
             os.makedirs(directory, exist_ok=True)
             print(f"📁 Tạo thư mục: {directory}")
     
-    def install_unrar_if_needed(self) -> bool:
-        """Cài đặt unrar nếu cần thiết trên Linux"""
+    def install_dependencies_if_needed(self) -> bool:
+        """Cài đặt các dependencies cần thiết để giải nén"""
+        print("🔧 Kiểm tra và cài đặt dependencies...")
+
+        # Cài đặt rarfile package
+        try:
+            import rarfile
+            print("✅ rarfile package đã có sẵn")
+        except ImportError:
+            print("📦 Đang cài đặt rarfile package...")
+            try:
+                subprocess.run(['pip', 'install', 'rarfile'], check=True)
+                print("✅ Đã cài đặt rarfile thành công")
+                # Import lại sau khi cài đặt
+                import rarfile
+            except subprocess.CalledProcessError:
+                print("❌ Không thể cài đặt rarfile. Thử cài đặt thủ công:")
+                print("   pip install rarfile")
+                return False
+
+        # Kiểm tra unrar tool trên Linux/Mac
         system = platform.system().lower()
-        
+
         if system == 'windows':
-            return True  # Windows không cần unrar command line
-        
+            print("✅ Windows: Sử dụng rarfile library")
+            return True
+
         # Kiểm tra xem unrar đã được cài đặt chưa
         try:
-            subprocess.run(['unrar'], capture_output=True, check=False)
-            return True
+            result = subprocess.run(['unrar'], capture_output=True, check=False)
+            if result.returncode != 127:  # 127 = command not found
+                print("✅ unrar tool đã có sẵn")
+                return True
         except FileNotFoundError:
             pass
-        
+
         # Thử cài đặt unrar
-        print("🔧 Đang cài đặt unrar...")
+        print("🔧 Đang cài đặt unrar tool...")
         try:
-            # Thử cài đặt với apt (Ubuntu/Debian)
-            subprocess.run(['sudo', 'apt', 'update'], check=True, capture_output=True)
-            subprocess.run(['sudo', 'apt', 'install', '-y', 'unrar'], check=True)
-            print("✅ Đã cài đặt unrar thành công")
-        except subprocess.CalledProcessError:
-            try:
-                # Thử cài đặt với yum (CentOS/RHEL)
-                subprocess.run(['sudo', 'yum', 'install', '-y', 'unrar'], check=True)
-                print("✅ Đã cài đặt unrar thành công")
-            except subprocess.CalledProcessError:
-                print("❌ Không thể cài đặt unrar tự động. Vui lòng cài đặt thủ công:")
-                print("   Ubuntu/Debian: sudo apt install unrar")
-                print("   CentOS/RHEL: sudo yum install unrar")
-                return False
-        return True
+            if system == 'linux':
+                # Thử cài đặt với apt (Ubuntu/Debian)
+                try:
+                    subprocess.run(['sudo', 'apt', 'update'], check=True, capture_output=True)
+                    subprocess.run(['sudo', 'apt', 'install', '-y', 'unrar'], check=True, capture_output=True)
+                    print("✅ Đã cài đặt unrar thành công (apt)")
+                    return True
+                except subprocess.CalledProcessError:
+                    # Thử cài đặt với yum (CentOS/RHEL)
+                    try:
+                        subprocess.run(['sudo', 'yum', 'install', '-y', 'unrar'], check=True, capture_output=True)
+                        print("✅ Đã cài đặt unrar thành công (yum)")
+                        return True
+                    except subprocess.CalledProcessError:
+                        pass
+            elif system == 'darwin':  # macOS
+                try:
+                    subprocess.run(['brew', 'install', 'unrar'], check=True, capture_output=True)
+                    print("✅ Đã cài đặt unrar thành công (brew)")
+                    return True
+                except subprocess.CalledProcessError:
+                    pass
+        except Exception as e:
+            print(f"⚠️  Lỗi khi cài đặt unrar: {e}")
+
+        print("⚠️  Không thể cài đặt unrar tự động. Sẽ thử sử dụng rarfile library")
+        print("💡 Nếu gặp lỗi, vui lòng cài đặt thủ công:")
+        if system == 'linux':
+            print("   Ubuntu/Debian: sudo apt install unrar")
+            print("   CentOS/RHEL: sudo yum install unrar")
+        elif system == 'darwin':
+            print("   macOS: brew install unrar")
+
+        return True  # Vẫn tiếp tục, sẽ thử dùng rarfile library
     
     def extract_archive(self, archive_path: str, extract_to: str) -> bool:
         """
-        Giải nén file zip hoặc rar
-        
+        Giải nén file zip hoặc rar với nhiều phương pháp fallback
+
         Args:
             archive_path: Đường dẫn file nén
             extract_to: Thư mục giải nén
-            
+
         Returns:
             True nếu thành công, False nếu thất bại
         """
         print(f"📂 Đang giải nén {archive_path}...")
-        
+
         try:
             if archive_path.endswith('.zip'):
+                print("📦 Giải nén file ZIP...")
                 with zipfile.ZipFile(archive_path, 'r') as zip_ref:
-                    zip_ref.extractall(extract_to)
+                    # Hiển thị progress bar cho ZIP
+                    members = zip_ref.namelist()
+                    for member in tqdm(members, desc="Extracting"):
+                        zip_ref.extract(member, extract_to)
+
             elif archive_path.endswith('.rar'):
+                print("📦 Giải nén file RAR...")
+                success = False
+
+                # Phương pháp 1: Sử dụng rarfile library
                 try:
+                    import rarfile
+                    print("🔧 Thử sử dụng rarfile library...")
                     with rarfile.RarFile(archive_path, 'r') as rar_ref:
-                        rar_ref.extractall(extract_to)
-                except rarfile.Error:
-                    # Fallback to command line unrar
+                        # Hiển thị progress bar cho RAR
+                        members = rar_ref.namelist()
+                        for member in tqdm(members, desc="Extracting"):
+                            rar_ref.extract(member, extract_to)
+                    success = True
+                    print("✅ Giải nén thành công bằng rarfile library")
+
+                except Exception as e:
+                    print(f"⚠️  rarfile library thất bại: {e}")
+
+                    # Phương pháp 2: Sử dụng command line unrar
                     try:
-                        subprocess.run(['unrar', 'x', archive_path, extract_to], check=True)
-                    except (subprocess.CalledProcessError, FileNotFoundError):
-                        print("❌ Không thể giải nén file RAR. Cần cài đặt unrar hoặc rarfile")
-                        print("   Cài đặt: pip install rarfile")
-                        print("   Hoặc: sudo apt install unrar (Linux)")
-                        return False
+                        print("🔧 Thử sử dụng unrar command line...")
+                        result = subprocess.run(
+                            ['unrar', 'x', '-y', archive_path, extract_to],
+                            check=True,
+                            capture_output=True,
+                            text=True
+                        )
+                        success = True
+                        print("✅ Giải nén thành công bằng unrar command")
+
+                    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+                        print(f"⚠️  unrar command thất bại: {e}")
+
+                        # Phương pháp 3: Thử với 7zip nếu có
+                        try:
+                            print("🔧 Thử sử dụng 7zip...")
+                            subprocess.run(
+                                ['7z', 'x', archive_path, f'-o{extract_to}', '-y'],
+                                check=True,
+                                capture_output=True
+                            )
+                            success = True
+                            print("✅ Giải nén thành công bằng 7zip")
+
+                        except (subprocess.CalledProcessError, FileNotFoundError):
+                            print("⚠️  7zip không có sẵn")
+
+                if not success:
+                    print("❌ Tất cả phương pháp giải nén RAR đều thất bại!")
+                    print("💡 Hướng dẫn khắc phục:")
+                    print("   1. Cài đặt rarfile: pip install rarfile")
+                    print("   2. Cài đặt unrar:")
+                    print("      - Ubuntu/Debian: sudo apt install unrar")
+                    print("      - CentOS/RHEL: sudo yum install unrar")
+                    print("      - macOS: brew install unrar")
+                    print("      - Windows: Tải WinRAR hoặc 7-Zip")
+                    print("   3. Hoặc tải file ZIP thay vì RAR")
+                    return False
+
             else:
-                raise ValueError(f"Định dạng file không được hỗ trợ: {archive_path}")
-            
+                print(f"❌ Định dạng file không được hỗ trợ: {archive_path}")
+                print("💡 Chỉ hỗ trợ file .zip và .rar")
+                return False
+
             print(f"✅ Đã giải nén thành công vào {extract_to}")
             return True
-            
+
         except Exception as e:
-            print(f"❌ Lỗi khi giải nén: {str(e)}")
+            print(f"❌ Lỗi không mong muốn khi giải nén: {str(e)}")
+            print("💡 Thử tải lại file hoặc kiểm tra file có bị hỏng không")
             return False
     
     def download_and_extract_dataset(self, file_id: str, temp_dir: str = 'temp_downloads') -> bool:
@@ -293,9 +389,10 @@ class DatasetManager:
             return True
         
         try:
-            # Cài đặt unrar nếu cần thiết (Linux)
-            if not self.install_unrar_if_needed():
-                return False
+            # Cài đặt dependencies nếu cần thiết
+            if not self.install_dependencies_if_needed():
+                print("⚠️  Một số dependencies không được cài đặt, nhưng sẽ tiếp tục thử...")
+                # Không return False, vẫn thử tiếp
             
             # Tạo thư mục tạm
             os.makedirs(temp_dir, exist_ok=True)
